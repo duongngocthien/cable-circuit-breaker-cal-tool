@@ -2,72 +2,11 @@ import streamlit as st
 import math
 
 # --- CẤU HÌNH TRANG WEB ---
-st.set_page_config(
-    page_title="IEC Cable & CB Calculator",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="IEC Cable Calculator", layout="centered")
+st.title("⚡ IEC Cable Correction Factors & Current Calculation")
+st.write("Ứng dụng tính toán hệ số hiệu chỉnh, chọn tiết diện cáp hạ thế và CB theo tiêu chuẩn IEC.")
 
-# --- THIẾT KẾ GIAO DIỆN PREMIUM VỚI CUSTOM CSS ---
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    /* Font mặc định cho toàn bộ trang */
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    /* Card kết quả */
-    .kpi-card {
-        padding: 20px;
-        border-radius: 12px;
-        color: white;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    }
-    
-    /* Tiêu đề phần */
-    .section-title {
-        font-size: 1.15rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-        color: #1e293b;
-        border-left: 4px solid #3b82f6;
-        padding-left: 8px;
-    }
-    .dark .section-title {
-        color: #f1f5f9;
-        border-left: 4px solid #60a5fa;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- BANNER ĐẦU TRANG ---
-st.markdown("""
-<div style="
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 30px;
-    border-radius: 16px;
-    color: white;
-    text-align: center;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    border: 1px solid rgba(255,255,255,0.1);
-">
-    <h1 style="color: white; margin: 0; font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px;">⚡ IEC CABLE & CB SELECTOR</h1>
-    <p style="margin: 10px 0 0 0; font-size: 1rem; opacity: 0.9; font-weight: 300;">Tính toán hệ số hiệu chỉnh, chọn tiết diện cáp hạ thế và CB theo tiêu chuẩn IEC 60364-5-52</p>
-</div>
-""", unsafe_allow_html=True)
-
-# --- DỮ LIỆU BẢNG TRA ---
+# --- DỮ LIỆU BẢNG TRA (Giữ nguyên từ code cũ) ---
 reduction_factors = {
     "Bunched in air": [1.00,0.80,0.70,0.65,0.60,0.57,0.54,0.52,0.50,0.45,0.41,0.38],
     "Single layer on wall": [1.00,0.85,0.79,0.75,0.73,0.72,0.72,0.71,0.70],
@@ -90,7 +29,6 @@ k3_factors = {
     "Very wet soil": 1.21, "Wet soil": 1.13, "Damp soil": 1.05, "Dry soil": 1.00, "Very dry soil": 0.86, "N/A": 1.00
 }
 
-# --- Bảng dây nhôm (Aluminum, single core) ---
 cable_table_al = {
     25: {"col4":121, "col5":103, "col6":107, "col7":138, "col8":122},
     35: {"col4":150, "col5":129, "col6":135, "col7":172, "col8":153},
@@ -107,7 +45,6 @@ cable_table_al = {
     630: {"col4":996, "col5":899, "col6":942, "col7":1154, "col8":1077}
 }
 
-# --- Bảng dây đồng (Copper, single core, không đi đất) ---
 cable_table_cu = {
     1.5: {"A":28, "B":25, "C":24}, 2.5: {"A":37, "B":34, "C":33}, 4: {"A":52, "B":44, "C":43},
     6: {"A":66, "B":55, "C":52}, 10: {"A":91, "B":79, "C":75}, 16: {"A":118, "B":110, "C":107},
@@ -118,7 +55,6 @@ cable_table_cu = {
     630: {"A":1254, "B":1117, "C":1077}, 800: {"A":1460, "B":1262, "C":1152}, 1000: {"A":1683, "B":1432, "C":1240}
 }
 
-# --- Bảng dây đồng có giáp nhôm (Copper armoured, buried) ---
 cable_table_cu_armoured = {
     16: {"A":142, "B":142, "C":135}, 25: {"A":185, "B":185, "C":172}, 35: {"A":226, "B":226, "C":208},
     50: {"A":275, "B":275, "C":235}, 70: {"A":340, "B":340, "C":290}, 95: {"A":405, "B":405, "C":345},
@@ -128,8 +64,6 @@ cable_table_cu_armoured = {
     1000: {"A":1254, "B":1254, "C":1038}
 }
 
-# --- Bảng thông số kỹ thuật CXV (Đồng XLPE/PVC) ---
-# Đã sửa lỗi thiếu thông số cho 800 mm² và 1000 mm² tránh crash KeyError
 cable_table_cxv = {
     1.5: {"Rdc": 12.1, "Dia": 5.8}, 2.5: {"Rdc": 7.41, "Dia": 6.2}, 4: {"Rdc": 4.61, "Dia": 6.8},
     6: {"Rdc": 3.08, "Dia": 7.3}, 10: {"Rdc": 1.83, "Dia": 7.5}, 16: {"Rdc": 1.15, "Dia": 8.4},
@@ -137,10 +71,9 @@ cable_table_cxv = {
     70: {"Rdc": 0.268, "Dia": 14.2}, 95: {"Rdc": 0.193, "Dia": 16.0}, 120: {"Rdc": 0.153, "Dia": 17.6},
     150: {"Rdc": 0.124, "Dia": 19.6}, 185: {"Rdc": 0.0991,"Dia": 21.6}, 240: {"Rdc": 0.0754,"Dia": 24.3},
     300: {"Rdc": 0.0601,"Dia": 27.0}, 400: {"Rdc": 0.0470,"Dia": 30.4}, 500: {"Rdc": 0.0366,"Dia": 34.0},
-    630: {"Rdc": 0.0283,"Dia": 38.8}, 800: {"Rdc": 0.0221, "Dia": 45.0}, 1000: {"Rdc": 0.0176, "Dia": 50.0}
+    630: {"Rdc": 0.0283,"Dia": 38.8}
 }
 
-# --- Bảng thông số kỹ thuật AXV (Nhôm XLPE/PVC) ---
 cable_table_axv = {
     10: {"Rdc": 3.08, "Dia": 7.5}, 16: {"Rdc": 1.91, "Dia": 8.4}, 25: {"Rdc": 1.20, "Dia": 9.9},
     35: {"Rdc": 0.868, "Dia": 11.0}, 50: {"Rdc": 0.641, "Dia": 12.3}, 70: {"Rdc": 0.443, "Dia": 14.3},
@@ -152,7 +85,7 @@ cable_table_axv = {
 cb_table_1p = [6,10,16,20,25,32,40,50,63,80,100,125]
 cb_table_3p = [6,10,16,20,25,32,40,50,63,75,80,100,125,160,175,200,225,250,315,400,500,630,800,1000,1250,1600,2000,3200]
 
-# --- HÀM HỖ TRỢ ---
+# --- HÀM LOGIC (Giữ nguyên) ---
 def select_cb(I_tt_k, system_type):
     table = cb_table_1p if system_type == "1 pha" else cb_table_3p
     for cb in table:
@@ -173,136 +106,88 @@ def select_cable(I_per_cable, k4_choice, conductor_type, k2_val, k3_val, system_
         col = "C" if k4_choice == "Bunched in air" else "B"
         return next(((a, v[col], col) for a, v in table.items() if v[col] >= I_per_cable), (None, None, None))
 
-def make_kpi_card(title, value, color_gradient, icon):
-    return f"""
-    <div class="kpi-card" style="background: {color_gradient};">
-        <div style="font-size: 0.85rem; opacity: 0.85; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">{icon} {title}</div>
-        <div style="font-size: 1.6rem; font-weight: 700; margin-top: 5px; line-height: 1.2;">{value}</div>
-    </div>
-    """
+# --- GIAO DIỆN WEB (STREAMLIT) ---
+col1, col2 = st.columns(2)
 
-# --- GIAO DIỆN CHÍNH (2 cột: Trái nhập liệu, Phải tính toán thời gian thực) ---
-left_col, right_col = st.columns([1, 1.25], gap="large")
+with col1:
+    st.subheader("📋 Thông số nguồn & Tải")
+    system_type = st.selectbox("Kiểu hệ thống điện", ["3 pha", "1 pha"])
+    power = st.number_input("P – Công suất (kW)", min_value=0.1, value=15.0, step=1.0)
+    voltage = st.number_input("U – Điện áp (V)", min_value=110, value=380 if system_type=="3 pha" else 220)
+    cos_phi = st.number_input("cosφ – Hệ số công suất", min_value=0.1, max_value=1.0, value=0.85, step=0.05)
+    k_du_tru = st.number_input("k_dự trữ (0–1)", min_value=0.1, max_value=1.0, value=0.8, step=0.05)
+    conductor_type = st.selectbox("Loại dây dẫn", ["Aluminum", "Copper"])
+    length = st.number_input("Chiều dài dây dẫn (m)", min_value=0.0, value=50.0, step=10.0)
+    deltaV_allow = st.number_input("ΔV% cho phép", min_value=0.1, value=5.0, step=0.5)
 
-with left_col:
-    st.markdown('<div class="section-title">⚡ 1. Thông số Nguồn & Tải</div>', unsafe_allow_html=True)
+with col2:
+    st.subheader("🌍 Điều kiện lắp đặt (Hệ số K)")
+    arrangement = st.selectbox("k4 – Cách thức sắp xếp cáp", list(reduction_factors.keys()))
     
-    sub_col1, sub_col2 = st.columns(2)
-    with sub_col1:
-        system_type = st.selectbox("Kiểu hệ thống", ["3 pha", "1 pha"])
-    with sub_col2:
-        conductor_type = st.selectbox("Loại lõi dẫn", ["Copper", "Aluminum"])
-        
-    sub_col3, sub_col4 = st.columns(2)
-    with sub_col3:
-        power = st.number_input("P – Công suất (kW)", min_value=0.01, value=15.0, step=1.0)
-    with sub_col4:
-        default_voltage = 380 if system_type == "3 pha" else 220
-        voltage = st.number_input("U – Điện áp (V)", min_value=50, value=default_voltage, step=10)
-        
-    sub_col5, sub_col6 = st.columns(2)
-    with sub_col5:
-        cos_phi = st.slider("cosφ – Hệ số công suất", min_value=0.1, max_value=1.0, value=0.85, step=0.01)
-    with sub_col6:
-        k_du_tru = st.slider("k_dự trữ (Hệ số an toàn)", min_value=0.1, max_value=1.0, value=0.80, step=0.05)
-        
-    sub_col7, sub_col8 = st.columns(2)
-    with sub_col7:
-        length = st.number_input("L – Chiều dài dây (m)", min_value=0.0, value=50.0, step=10.0)
-    with sub_col8:
-        deltaV_allow = st.number_input("ΔV% giới hạn (%)", min_value=0.1, max_value=20.0, value=5.0, step=0.5)
-
-    st.markdown('<div class="section-title">🌍 2. Điều kiện Lắp đặt & Môi trường</div>', unsafe_allow_html=True)
-    
-    arrangement = st.selectbox("k4 – Phương thức đi dây", list(reduction_factors.keys()))
-    
-    # Giới hạn số mạch đi chung động theo k4
+    # Số sợi song song (Động dựa vào k4 chọn)
     max_circuits = len(reduction_factors[arrangement])
-    num_cables = st.number_input("N – Số sợi chạy song song", min_value=1, max_value=max_circuits, value=1, step=1)
+    num_cables = st.number_input("Số mạch đi chung / Số sợi song song", min_value=1, max_value=max_circuits, value=1)
     
-    sub_col9, sub_col10 = st.columns(2)
-    with sub_col9:
-        insul_air = st.selectbox("k1 – Loại cách điện (Khí)", list(k1_factors.keys()))
-    with sub_col10:
-        air_temps = sorted(list(k1_factors[insul_air].keys()))
-        temp_air = st.selectbox("Nhiệt độ khí (°C)", air_temps, index=air_temps.index(30) if 30 in air_temps else 0)
-        
-    ground_mode = st.radio("Môi trường lắp đặt", ["Đi trên không / Máng cáp", "Đi ngầm dưới đất"], horizontal=True)
+    insul_air = st.selectbox("k1 – Loại cách điện (Môi trường khí)", list(k1_factors.keys()))
+    air_temps = sorted(list(k1_factors[insul_air].keys()))
+    temp_air = st.selectbox("Nhiệt độ môi trường khí (°C)", air_temps, index=air_temps.index(30) if 30 in air_temps else 0)
     
-    if ground_mode == "Đi trên không / Máng cáp":
+    insul_ground = st.selectbox("k2 – Loại cách điện (Dưới đất)", list(k2_factors.keys()))
+    ground_mode = st.selectbox("Địa điểm đi dây ngầm", ["Không đi ngầm (N/A)", "Có đi ngầm dưới đất"])
+    
+    if ground_mode == "Không đi ngầm (N/A)":
         k2 = 1.0
         soil = "N/A"
         k3 = 1.0
     else:
-        sub_col11, sub_col12 = st.columns(2)
-        with sub_col11:
-            insul_ground = st.selectbox("k2 – Loại cách điện (Đất)", list(k2_factors.keys()))
-            ground_temps = sorted(list(k2_factors[insul_ground].keys()))
-            temp_ground = st.selectbox("Nhiệt độ đất (°C)", ground_temps, index=ground_temps.index(20) if 20 in ground_temps else 0)
-            k2 = k2_factors[insul_ground].get(temp_ground, 1.0)
-        with sub_col12:
-            soil = st.selectbox("k3 – Tính chất đất", [k for k in k3_factors.keys() if k != "N/A"])
-            k3 = k3_factors[soil]
+        ground_temps = sorted(list(k2_factors[insul_ground].keys()))
+        temp_ground = st.selectbox("Nhiệt độ dưới đất (°C)", ground_temps, index=ground_temps.index(20) if 20 in ground_temps else 0)
+        k2 = k2_factors[insul_ground].get(temp_ground, 1.0)
+        soil = st.selectbox("k3 – Tính chất đất", [k for k in k3_factors.keys() if k != "N/A"])
+        k3 = k3_factors[soil]
 
-# --- PHẦN TÍNH TOÁN (Real-time, không cần bấm nút) ---
-num_cables_idx = min(num_cables - 1, len(reduction_factors[arrangement]) - 1)
-k4 = reduction_factors[arrangement][num_cables_idx]
-k1 = k1_factors[insul_air].get(temp_air, 1.0)
-K = k1 * k2 * k3 * k4
-
-P_watt = power * 1000
-if system_type == "3 pha":
-    I_tt = P_watt / (math.sqrt(3) * voltage * cos_phi)
-else:
-    I_tt = P_watt / (voltage * cos_phi)
-
-I_tt_k = I_tt / K
-I_chon = I_tt_k / k_du_tru
-I_per_cable = I_chon / num_cables
-I_tt_cb = I_tt / k_du_tru
-
-# Tra bảng chọn cáp
-area, ampacity, col_used = select_cable(I_per_cable, arrangement, conductor_type, k2, k3, system_type)
-
-with right_col:
-    st.markdown('<div class="section-title">📊 Kết Quả Tính Toán & Khuyến Nghị</div>', unsafe_allow_html=True)
+# --- TÍNH TOÁN & HIỂN THỊ KẾT QUẢ ---
+st.write("---")
+if st.button("🚀 TÍNH TOÁN KẾT QUẢ", type="primary"):
+    k4 = reduction_factors[arrangement][num_cables - 1]
+    k1 = k1_factors[insul_air].get(temp_air, 1.0)
+    K = k1 * k2 * k3 * k4
     
-    # KPI 1: Đề xuất tiết diện cáp
-    if area:
-        cable_title = f"{num_cables} Sợi x {area} mm² ({conductor_type})"
-        cable_gradient = "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)"
+    P_watt = power * 1000
+    if system_type == "3 pha":
+        I_tt = P_watt / (math.sqrt(3) * voltage * cos_phi)
     else:
-        cable_title = "Không tìm thấy cỡ cáp phù hợp!"
-        cable_gradient = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+        I_tt = P_watt / (voltage * cos_phi)
         
-    # KPI 2: CB bảo vệ
-    cb_val = select_cb(I_tt_cb, system_type)
-    if cb_val:
-        cb_title = f"{cb_val} A"
-        cb_gradient = "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
-    else:
-        cb_title = "Không tìm thấy CB phù hợp"
-        cb_gradient = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-        
-    # Sụt áp
-    deltaU = 0.0
-    deltaU_percent = 0.0
-    status_msg = ""
-    status_ok = True
+    I_tt_k = I_tt / K
+    I_chon = I_tt_k / k_du_tru
+    I_per_cable = I_chon / num_cables
+    I_tt_cb = I_tt / k_du_tru
+    
+    area, ampacity, col = select_cable(I_per_cable, arrangement, conductor_type, k2, k3, system_type)
+    
+    # Hiển thị các hệ số K
+    st.subheader("📊 1. Các hệ số hiệu chỉnh (IEC)")
+    st.info(f"**k1** (Khí): {k1:.2f} | **k2** (Đất): {k2:.2f} | **k3** (Tính chất đất): {k3:.2f} | **k4** (Sắp xếp): {k4:.2f}  \n➡️ **Hệ số tổng hợp K = {K:.2f}**")
+    
+    # Hiển thị dòng điện
+    st.subheader("📈 2. Dòng điện tính toán")
+    st.warning(f"- Dòng điện tải ban đầu $I_{{tt}}$: **{I_tt:.2f} A** \n- Dòng điện sau suy giảm $I_{{tt\_k}}$: **{I_tt_k:.2f} A** \n- Dòng tính toán chọn dây (gồm dự trữ): **{I_chon:.2f} A** \n- Dòng phân bổ trên mỗi sợi: **{I_per_cable:.2f} A**")
+    
+    # Kết quả chọn dây và sụt áp
+    st.subheader("🔌 3. Khuyến nghị Tiết diện Cáp & Thiết bị Bảo vệ")
     
     if area:
-        # Lấy thông số kỹ thuật (Rdc & Dia)
+        res_text = f"✅ **Tiết diện đề xuất ({conductor_type}): {area} mm²** (Dòng định mức cáp gốc: {ampacity} A, cột bảng tra: {col})  \n"
+        res_text += f"- Cấu hình: Chạy song song **{num_cables}** sợi.  \n"
+        
+        # Sụt áp
         R0 = cable_table_cxv[area]["Rdc"] if conductor_type == "Copper" else cable_table_axv[area]["Rdc"]
-        Dia = cable_table_cxv[area]["Dia"] if conductor_type == "Copper" else cable_table_axv[area]["Dia"]
-        
-        # Hiệu chỉnh điện trở theo nhiệt độ
-        T_ambient = temp_air if ground_mode == "Đi trên không / Máng cáp" else temp_ground
-        alpha = 0.00393 if conductor_type == "Copper" else 0.00403
-        R_T = (R0 * (1 + alpha * (T_ambient - 20))) / num_cables
+        alpha = 0.00393 if conductor_type=="Copper" else 0.00403
+        R_T = (R0 * (1 + alpha * (temp_air - 20))) / num_cables
         X = 0.08
         L_km = length / 1000
         
-        # Công thức sụt áp IEC
         if system_type == "3 pha":
             deltaU = math.sqrt(3) * I_tt * (R_T * cos_phi + X * math.sin(math.acos(cos_phi))) * L_km
         else:
@@ -310,88 +195,18 @@ with right_col:
             
         deltaU_percent = 100 * deltaU / voltage
         
+        res_text += f"- Điện trở dây dẫn tại {temp_air}°C: {R_T:.4f} $\Omega$/km  \n"
         if deltaU_percent <= deltaV_allow:
-            vd_gradient = "linear-gradient(135deg, #10b981 0%, #047857 100%)"
-            status_msg = f"🟢 Đạt yêu cầu sụt áp (≤ {deltaV_allow}%)"
+            res_text += f"- **Sụt áp ước tính: {deltaU:.2f} V ({deltaU_percent:.2f}%)** 🟢 *Nằm trong giới hạn cho phép (≤{deltaV_allow}%)*"
         else:
-            vd_gradient = "linear-gradient(135deg, #f43f5e 0%, #be123c 100%)"
-            status_msg = f"🔴 Cảnh báo: Sụt áp vượt giới hạn ({deltaU_percent:.2f}% > {deltaV_allow}%)"
-            status_ok = False
+            res_text += f"- **Sụt áp ước tính: {deltaU:.2f} V ({deltaU_percent:.2f}%)** 🔴 *VƯỢT QUÁ giới hạn cho phép (>{deltaV_allow}%)*"
     else:
-        vd_gradient = "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)"
-        status_msg = "Không xác định"
-        status_ok = False
-
-    # Hiển thị các KPI chính dưới dạng thẻ thiết kế đẹp
-    kpi_col1, kpi_col2 = st.columns(2)
-    with kpi_col1:
-        st.markdown(make_kpi_card("Tiết diện cáp & Sắp xếp", cable_title, cable_gradient, "🔌"), unsafe_allow_height=False, unsafe_allow_html=True)
-    with kpi_col2:
-        st.markdown(make_kpi_card("CB Bảo Vệ Đề Xuất", cb_title, cb_gradient, "⚡"), unsafe_allow_height=False, unsafe_allow_html=True)
+        res_text = "❌ Không tìm thấy tiết diện cáp nào phù hợp trong bảng tra dữ liệu có sẵn.  \n"
         
-    st.markdown(make_kpi_card("Độ sụt áp ước tính", f"{deltaU_percent:.2f}% ({deltaU:.2f} V)", vd_gradient, "📉"), unsafe_allow_height=False, unsafe_allow_html=True)
-
-    if area:
-        if status_ok:
-            st.success(status_msg)
-        else:
-            st.error(status_msg)
-            st.warning("👉 Khuyên dùng: Tăng số sợi song song (N), chọn kiểu đặt sát hoặc tăng cỡ cáp thủ công bằng cách tăng hệ số dự trữ.")
-            
-    # Tạo các tab phân tích chi tiết cho kỹ sư
-    tab1, tab2, tab3 = st.tabs(["🔍 Chi Tiết Hệ Số K", "📊 Phân Tích Dòng Điện", "📐 Thông Số Vật Lý & Tổn Hao"])
-    
-    with tab1:
-        st.write("Các hệ số hiệu chỉnh theo tiêu chuẩn **IEC 60364-5-52**:")
-        k_df = {
-            "Hệ số": ["k1 (Nhiệt độ khí)", "k2 (Nhiệt độ đất)", "k3 (Đất)", "k4 (Sắp xếp)", "Tổng hệ số K"],
-            "Mô tả": [
-                f"Cách điện {insul_air} ở {temp_air}°C",
-                f"Cách điện {insul_ground} ở {temp_ground}°C" if ground_mode != "Đi trên không / Máng cáp" else "Không đi ngầm dưới đất (1.00)",
-                f"Tính chất: {soil}" if ground_mode != "Đi trên không / Máng cáp" else "Không đi ngầm dưới đất (1.00)",
-                f"Cách đi dây '{arrangement}' với {num_cables} sợi",
-                "K = k1 × k2 × k3 × k4"
-            ],
-            "Giá trị": [f"{k1:.2f}", f"{k2:.2f}", f"{k3:.2f}", f"{k4:.2f}", f"{K:.2f}"]
-        }
-        st.table(k_df)
-        st.write("---")
-        st.markdown(r"**Công thức liên hệ dòng cho phép gốc và dòng hiệu chỉnh:**")
-        st.latex(r"I_{per\_cable} \ge \frac{I_{tt}}{K \cdot k_{dự\_trữ} \cdot N}")
-
-    with tab2:
-        st.write("Quá trình biến đổi dòng điện thiết kế:")
-        curr_data = {
-            "Dòng điện tải ban đầu ($I_{tt}$)": f"{I_tt:.2f} A",
-            "Dòng điện sau hiệu chỉnh suy giảm ($I_{tt\_k} = I_{tt} / K$)": f"{I_tt_k:.2f} A",
-            "Dòng điện chọn cáp tổng (gồm dự trữ $I_{tt\_k} / k_{dự\_trữ}$)": f"{I_chon:.2f} A",
-            "Dòng điện phân bổ trên mỗi dây dẫn ($I_{per\_cable}$)": f"{I_per_cable:.2f} A",
-            "Dòng điện tính toán cho CB ($I_{tt} / k_{dự\_trữ}$)": f"{I_tt_cb:.2f} A"
-        }
-        for k, v in curr_data.items():
-            st.markdown(f"- **{k}**: `{v}`")
-            
-        st.write("---")
-        st.write("**Công thức dòng tải thiết kế:**")
-        if system_type == "3 pha":
-            st.latex(r"I_{tt} = \frac{P}{\sqrt{3} \cdot U \cdot \cos\phi}")
-        else:
-            st.latex(r"I_{tt} = \frac{P}{U \cdot \cos\phi}")
-
-    with tab3:
-        if area:
-            st.write("Thông số chi tiết cáp lựa chọn:")
-            st.write(f"- **Đường kính tổng ngoài gần đúng**: `{Dia} mm` (mỗi sợi)")
-            st.write(f"- **Điện trở một chiều (DC) gốc ở 20°C (R0)**: `{R0} \Omega/km`")
-            st.write(f"- **Điện trở hiệu chỉnh nhiệt độ hoạt động (RT)**: `{R_T:.5f} \Omega/km` (cho hệ song song `{num_cables}` sợi)")
-            st.write(f"- **Điện kháng ước lượng (X)**: `0.08 \Omega/km` (tiêu chuẩn IEC)")
-            
-            st.write("---")
-            st.write("**Công thức tính sụt áp theo IEC 60364:**")
-            if system_type == "3 pha":
-                st.latex(r"\Delta U = \sqrt{3} \cdot I_{tt} \cdot (R_T \cdot \cos\phi + X \cdot \sin(\theta)) \cdot \frac{L}{1000}")
-            else:
-                st.latex(r"\Delta U = 2 \cdot I_{tt} \cdot (R_T \cdot \cos\phi + X \cdot \sin(\theta)) \cdot \frac{L}{1000}")
-            st.caption("Trong đó: sin(θ) được tính từ cos(φ) qua công thức lượng giác.")
-        else:
-            st.warning("Không có dữ liệu cáp phù hợp để tính thông số vật lý.")
+    cb_value = select_cb(I_tt_cb, system_type)
+    if cb_value:
+        res_text += f"  \n⚡ **Aptomat (CB) khuyến nghị: {cb_value} A** (Hệ thống {system_type})"
+    else:
+        res_text += f"  \n❌ Không tìm thấy CB phù hợp trong bảng tra."
+        
+    st.success(res_text)
