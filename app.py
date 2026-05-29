@@ -271,16 +271,14 @@ with left_col:
         st.markdown('<div class="panel-header">Load input parameters</div>', unsafe_allow_html=True)
         load_cond = row_select("Number and type of load conductors", "load_cond", ["3Ph+N", "1Ph+N"], 0)
         
-        # Dòng nhập tải đặc biệt (giá trị + đơn vị trên cùng dòng)
-        col_lbl, col_wgt = st.columns([3, 2])
+        # Dòng nhập tải đặc biệt (giá trị + đơn vị trên cùng dòng bằng cách dùng 3 cột ngang hàng không lồng nhau)
+        col_lbl, col_val, col_unit = st.columns([3, 1.2, 0.8])
         with col_lbl:
             st.markdown('<div class="row-label">Sr (kVA) / Pr (kW) / Ir (A)</div>', unsafe_allow_html=True)
-        with col_wgt:
-            col_val, col_unit = st.columns([3, 2])
-            with col_val:
-                load_val = st.number_input("Load Value", value=15.0, min_value=0.0, label_visibility="collapsed", key="load_val")
-            with col_unit:
-                load_unit = st.selectbox("Load Unit", ["kW", "kVA", "A"], label_visibility="collapsed", key="load_unit")
+        with col_val:
+            load_val = st.number_input("Load Value", value=15.0, min_value=0.0, label_visibility="collapsed", key="load_val")
+        with col_unit:
+            load_unit = st.selectbox("Load Unit", ["kW", "kVA", "A"], label_visibility="collapsed", key="load_unit")
                 
         pf = row_number("Power factor", "pf", 0.85, 0.05, 0.1)
 
